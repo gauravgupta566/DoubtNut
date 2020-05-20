@@ -10,22 +10,26 @@ import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.example.doubtnut.R
 import com.example.doubtnut.utils.CustomTabHelper
 import com.example.doubtnut.utils.WebViewActivity
+import kotlinx.android.synthetic.main.fragment_details_headline.view.*
+
 
 class DetailsHeadline : Fragment() {
 
     private var customTabHelper: CustomTabHelper = CustomTabHelper()
 
-    var MINDORKS_PUBLICATION="https://edition.cnn.com/2020/05/18/asia/china-world-health-assembly-investigation-intl-hnk/index.html"
+    var url:String?=null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        return inflater.inflate(R.layout.fragment_details_headline, container, false)
+        url = arguments!!.getString("url")
+
+
+        return inflater.inflate(com.example.doubtnut.R.layout.fragment_details_headline, container, false)
     }
 
 
@@ -33,10 +37,13 @@ class DetailsHeadline : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
+
+        view.progressBar.visibility=View.VISIBLE
+
         val builder = CustomTabsIntent.Builder()
 
         // modify toolbar color
-        builder.setToolbarColor(ContextCompat.getColor(context!!, R.color.colorPrimary))
+        builder.setToolbarColor(ContextCompat.getColor(context!!, com.example.doubtnut.R.color.colorAccent))
 
         // add share button to overflow menu
         builder.addDefaultShareMenuItem()
@@ -45,7 +52,7 @@ class DetailsHeadline : Fragment() {
 
         val requestCode = 100
         val intent = anotherCustomTab.intent
-        intent.setData(Uri.parse(MINDORKS_PUBLICATION))
+        intent.setData(Uri.parse(url))
 
         val pendingIntent = PendingIntent.getActivity(context,
             requestCode,
@@ -55,6 +62,7 @@ class DetailsHeadline : Fragment() {
         // add menu item to oveflow
         builder.addMenuItem("Sample item", pendingIntent)
 
+
         // menu item icon
         // val bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)
         // builder.setActionButton(bitmap, "Android", pendingIntent, true)
@@ -63,6 +71,7 @@ class DetailsHeadline : Fragment() {
         // builder.setCloseButtonIcon(bitmap)
 
         // show website title
+
         builder.setShowTitle(true)
 
         // animation for enter and exit of tab
@@ -71,18 +80,28 @@ class DetailsHeadline : Fragment() {
 
         val customTabsIntent = builder.build()
 
-        val packageName = customTabHelper.getPackageNameToUse(context!!, MINDORKS_PUBLICATION)
+        val packageName = customTabHelper.getPackageNameToUse(context!!, url!!)
 
         if (packageName == null) {
             // if chrome not available open in web view
             val intentOpenUri = Intent(context!!, WebViewActivity::class.java)
-            intentOpenUri.putExtra(WebViewActivity.EXTRA_URL, Uri.parse(MINDORKS_PUBLICATION).toString())
+            intentOpenUri.putExtra(WebViewActivity.EXTRA_URL, Uri.parse(url).toString())
             startActivity(intentOpenUri)
         } else {
             customTabsIntent.intent.setPackage(packageName)
-            customTabsIntent.launchUrl(context!!, Uri.parse(MINDORKS_PUBLICATION))
+            customTabsIntent.launchUrl(context!!, Uri.parse(url))
+
         }
+
+        view.progressBar.visibility=View.GONE
+
     }
+
+    override fun onDetach() {
+        super.onDetach()
+    }
+
+
     }
 
 

@@ -13,6 +13,6 @@ interface ApiInterface {
     @Headers("X-Api-Key:334d582ec3f340a5a60ed696395ed500"
       ,"content-type:application/json")
     @GET("v2/top-headlines")
-    fun getHeadlineList(@Query("country")  country:String): Observable<HeadlineModel>
+    fun getHeadlineList(@Query("country")  country:String,@Query("pageNumber") pageNumber:Int): Observable<HeadlineModel>
 }
 
