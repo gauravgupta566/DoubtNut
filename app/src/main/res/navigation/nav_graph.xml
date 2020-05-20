@@ -10,27 +10,12 @@
         android:label="fragment_main"
         tools:layout="@layout/headlinelist_fragment">
 
-        <argument android:name="url"
-            android:defaultValue="None"/>
 
-        <action android:id="@+id/action_headlinefragment_to_detailsfragment"
-        app:destination="@id/detailsfragment"
-        app:popEnterAnim="@anim/slide_in_left"
-        app:popExitAnim="@anim/slide_out_right"
-        app:enterAnim="@anim/slide_in_right"
-        app:exitAnim="@anim/slide_out_left"
-        />
 
     </fragment>
 
 
 
-    <fragment android:id="@+id/detailsfragment"
-        android:name="com.example.doubtnut.ui.main.DetailsHeadline"
-        android:label="fragment_main"
-        tools:layout="@layout/fragment_details_headline">
-
-    </fragment>
 
 
 </navigation>

@@ -1,10 +1,15 @@
 package com.example.doubtnut.ui.main
 
+import android.app.PendingIntent
+import android.content.Intent
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -15,8 +20,10 @@ import com.example.doubtnut.R
 import com.example.doubtnut.adapter.HeadlineAdapter
 import com.example.doubtnut.responsemodel.Article
 import com.example.doubtnut.responsemodel.HeadlineModel
+import com.example.doubtnut.utils.CustomTabHelper
 import com.example.doubtnut.utils.RecyclerItemClickListener
 import com.example.doubtnut.utils.VerticalSpaceItemDecoration
+import com.example.doubtnut.utils.WebViewActivity
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -26,6 +33,8 @@ import kotlinx.android.synthetic.main.headlinelist_fragment.*
 
 class HeadlineListFragment : Fragment() {
 
+
+    private var customTabHelper: CustomTabHelper = CustomTabHelper()
 
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter:HeadlineAdapter
@@ -61,7 +70,9 @@ class HeadlineListFragment : Fragment() {
 
                         list[position].url
                         val url = list[position].url
-                        val bundle = bundleOf(
+
+                        loadUrl(url)
+                        /*val bundle = bundleOf(
                             "url" to url
 
                         )
@@ -70,7 +81,7 @@ class HeadlineListFragment : Fragment() {
 
                             bundle
                         )
-
+*/
 
                     }
                 })
@@ -78,6 +89,64 @@ class HeadlineListFragment : Fragment() {
 
 
         setUpLoadMoreListener()
+
+    }
+
+    private fun loadUrl(url: String) {
+
+        val builder = CustomTabsIntent.Builder()
+
+        // modify toolbar color
+        builder.setToolbarColor(ContextCompat.getColor(context!!, com.example.doubtnut.R.color.colorAccent))
+
+        // add share button to overflow menu
+        builder.addDefaultShareMenuItem()
+
+        val anotherCustomTab = CustomTabsIntent.Builder().build()
+
+        val requestCode = 100
+        val intent = anotherCustomTab.intent
+        intent.setData(Uri.parse(url))
+
+        val pendingIntent = PendingIntent.getActivity(context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT)
+
+        // add menu item to oveflow
+        builder.addMenuItem("Sample item", pendingIntent)
+
+
+        // menu item icon
+        // val bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)
+        // builder.setActionButton(bitmap, "Android", pendingIntent, true)
+
+        // modify back button icon
+        // builder.setCloseButtonIcon(bitmap)
+
+        // show website title
+
+        builder.setShowTitle(true)
+
+        // animation for enter and exit of tab
+        builder.setStartAnimations(context!!, android.R.anim.fade_in, android.R.anim.fade_out)
+        builder.setExitAnimations(context!!, android.R.anim.fade_in, android.R.anim.fade_out)
+
+        val customTabsIntent = builder.build()
+
+        val packageName = customTabHelper.getPackageNameToUse(context!!, url!!)
+
+        if (packageName == null) {
+            // if chrome not available open in web view
+            val intentOpenUri = Intent(context!!, WebViewActivity::class.java)
+            intentOpenUri.putExtra(WebViewActivity.EXTRA_URL, Uri.parse(url).toString())
+            startActivity(intentOpenUri)
+        } else {
+            customTabsIntent.intent.setPackage(packageName)
+            customTabsIntent.launchUrl(context!!, Uri.parse(url))
+
+        }
+
 
     }
 
