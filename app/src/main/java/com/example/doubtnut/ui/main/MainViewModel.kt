@@ -6,7 +6,6 @@ import com.example.doubtnut.responsemodel.HeadlineModel
 import com.example.doubtnut.utils.ApiClient
 import com.example.doubtnut.utils.ApiInterface
 import io.reactivex.Flowable
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import retrofit2.Response
@@ -23,22 +22,6 @@ class MainViewModel(application:Application) : AndroidViewModel(application) {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
-
-
-    /*fun fetchData(pageNumber:Int):Observable<HeadlineModel>{
-
-
-*//*
-        val observale=  service.getHeadlineList("us",pageNumber)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
-
-        return observale
-*//*
-
-    }
-*/
 
 
 

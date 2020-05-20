@@ -21,7 +21,6 @@ import com.example.doubtnut.responsemodel.HeadlineModel
 import com.example.doubtnut.utils.CustomTabHelper
 import com.example.doubtnut.utils.RecyclerItemClickListener
 import com.example.doubtnut.utils.VerticalSpaceItemDecoration
-import com.example.doubtnut.utils.WebViewActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
@@ -70,13 +69,10 @@ class HeadlineListFragment : Fragment() {
         initRecyclerView()
         setUpLoadMoreListener()
 
-        addingObserver()
 
 
     }
 
-    private fun addingObserver() {
-          }
 
     private fun initRecyclerView() {
         val density = Resources.getSystem().getDisplayMetrics().density
@@ -147,16 +143,8 @@ class HeadlineListFragment : Fragment() {
 
         val packageName = customTabHelper.getPackageNameToUse(context!!, url)
 
-        if (packageName == null) {
-            // if chrome not available open in web view
-            val intentOpenUri = Intent(context!!, WebViewActivity::class.java)
-            intentOpenUri.putExtra(WebViewActivity.EXTRA_URL, Uri.parse(url).toString())
-            startActivity(intentOpenUri)
-        } else {
-            customTabsIntent.intent.setPackage(packageName)
-            customTabsIntent.launchUrl(context!!, Uri.parse(url))
-
-        }
+        customTabsIntent.intent.setPackage(packageName)
+        customTabsIntent.launchUrl(context!!, Uri.parse(url))
 
 
     }
@@ -209,9 +197,9 @@ class HeadlineListFragment : Fragment() {
             ?.doOnNext(object : Consumer<Response<HeadlineModel>> {
                 @Throws(Exception::class)
                 override fun accept(t: Response<HeadlineModel>?) {
-                    var response=t?.body()
+                    val response=t?.body()
                     list.addAll(response!!.articles)
-                    resultSize=response?.totalResults
+                    resultSize=response!!.totalResults
                     adapter.notifyDataSetChanged()
 
                     //    mAdapter.setUsers(gitHubUsers.body())
@@ -239,43 +227,7 @@ class HeadlineListFragment : Fragment() {
 
     }
 
-   /* private fun fetchData() {
-        val gettingObservable=  viewModel.fetchData(pageNumber)
 
-        gettingObservable
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(getHeadlineObserver())
-
-    }
-*/
-
-   /* private fun getHeadlineObserver(): Observer<HeadlineModel> {
-        return object : Observer<HeadlineModel> {
-
-            override fun onSubscribe(d: Disposable) {}
-
-            override fun onNext(headline: HeadlineModel) {
-
-                loading=false
-
-                list.addAll(headline.articles)
-                adapter.notifyDataSetChanged()
-                if (pageNumber==1){
-                    resultSize= headline.totalResults
-
-                }
-
-            }
-
-            override fun onError(e: Throwable) {}
-
-            override fun onComplete() {
-
-            }
-        }
-    }
-*/
 
     override fun onDetach() {
         super.onDetach()
