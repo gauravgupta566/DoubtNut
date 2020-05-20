@@ -13,15 +13,16 @@ class MainViewModel(application:Application) : AndroidViewModel(application) {
 
     private val context = getApplication<Application>().applicationContext
 
+    val service=  ApiClient.getClient(context).create(ApiInterface::class.java)
 
 
     fun fetchData(pageNumber:Int):Observable<HeadlineModel>{
 
-        val service=  ApiClient.getClient(context).create(ApiInterface::class.java)
 
         val observale=  service.getHeadlineList("us",pageNumber)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+
 
         return observale
 

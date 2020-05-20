@@ -5,15 +5,14 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.doubtnut.R
@@ -43,6 +42,7 @@ class HeadlineListFragment : Fragment() {
 
     var list: ArrayList<Article> = java.util.ArrayList()
     var pageNumber=1
+    var loading =false;
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,9 +53,15 @@ class HeadlineListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        initRecyclerView();
+       setUpLoadMoreListener()
+
+    }
+
+    private fun initRecyclerView() {
         val density = Resources.getSystem().getDisplayMetrics().density
         val setHeightRecyclerViewItem = Math.round(15 * density)
-        val navController = Navigation.findNavController(view)
 
         manager=LinearLayoutManager(context)
         adapter= HeadlineAdapter(list)
@@ -86,10 +92,6 @@ class HeadlineListFragment : Fragment() {
                     }
                 })
         )
-
-
-        setUpLoadMoreListener()
-
     }
 
     private fun loadUrl(url: String) {
@@ -97,7 +99,7 @@ class HeadlineListFragment : Fragment() {
         val builder = CustomTabsIntent.Builder()
 
         // modify toolbar color
-        builder.setToolbarColor(ContextCompat.getColor(context!!, com.example.doubtnut.R.color.colorAccent))
+        builder.setToolbarColor(ContextCompat.getColor(context!!, R.color.colorAccent))
 
         // add share button to overflow menu
         builder.addDefaultShareMenuItem()
@@ -134,7 +136,7 @@ class HeadlineListFragment : Fragment() {
 
         val customTabsIntent = builder.build()
 
-        val packageName = customTabHelper.getPackageNameToUse(context!!, url!!)
+        val packageName = customTabHelper.getPackageNameToUse(context!!, url)
 
         if (packageName == null) {
             // if chrome not available open in web view
@@ -158,8 +160,9 @@ class HeadlineListFragment : Fragment() {
                 val totalItemCount=adapter.itemCount
                 val lastVisibleItem=manager.findLastVisibleItemPosition()
 
-                if (totalItemCount<=(lastVisibleItem+1)&& resultSize>totalItemCount){
+                if (!loading&&totalItemCount<=(lastVisibleItem+1)&& resultSize>totalItemCount){
                     pageNumber++
+                    loading=true
                     fetchData()
 
 
@@ -199,6 +202,8 @@ class HeadlineListFragment : Fragment() {
             override fun onSubscribe(d: Disposable) {}
 
             override fun onNext(headline: HeadlineModel) {
+
+                loading=false
 
                 list.addAll(headline.articles)
                 adapter.notifyDataSetChanged()
