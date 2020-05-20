@@ -76,10 +76,12 @@ dependencies {
     implementation "com.google.android.material:material:$material_version"
 
     testImplementation "org.powermock:powermock-api-mockito2:2.0.0-beta.5"
+    testImplementation "org.powermock:powermock-module-junit4-rule-agent:2.0.0-beta.5"
     testImplementation "org.powermock:powermock-module-junit4:2.0.0-beta.5"
-    testImplementation "org.mockito:mockito-core:2.13.0"
-    testImplementation "org.mockito:mockito-inline:2.13.0"
+//testImplementation 'org.powermock:powermock-module-junit4-rule:2.0.0-beta.5'
 
+// Mockito
+    testImplementation "org.mockito:mockito-core:2.11.0"
 
 
 

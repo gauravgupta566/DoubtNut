@@ -44,6 +44,7 @@ class HeadlineListFragment : Fragment() {
     private var pagination: PublishProcessor<Int>? = null
     private var compositeDisposable: CompositeDisposable? = null
 
+
     var list: ArrayList<Article> = java.util.ArrayList()
     var pageNumber=1
     var loading =false
@@ -74,11 +75,12 @@ class HeadlineListFragment : Fragment() {
     }
 
 
-    private fun initRecyclerView() {
-        val density = Resources.getSystem().getDisplayMetrics().density
-        val setHeightRecyclerViewItem = Math.round(15 * density)
+     fun initRecyclerView() {
 
-        manager=LinearLayoutManager(context)
+         val density = Resources.getSystem().getDisplayMetrics().density
+         val setHeightRecyclerViewItem = Math.round(15 * density)
+
+         manager=LinearLayoutManager(context)
         adapter= HeadlineAdapter(list)
         recyclerView.layoutManager=manager
         recyclerView.adapter=adapter
@@ -149,7 +151,7 @@ class HeadlineListFragment : Fragment() {
 
     }
 
-    private fun setUpLoadMoreListener() {
+     fun setUpLoadMoreListener() {
 
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener(){
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
