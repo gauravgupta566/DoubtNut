@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,11 +22,15 @@ import com.example.doubtnut.utils.CustomTabHelper
 import com.example.doubtnut.utils.RecyclerItemClickListener
 import com.example.doubtnut.utils.VerticalSpaceItemDecoration
 import com.example.doubtnut.utils.WebViewActivity
-import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
+import io.reactivex.functions.Function
+import io.reactivex.processors.PublishProcessor
 import kotlinx.android.synthetic.main.headlinelist_fragment.*
+import org.reactivestreams.Publisher
+import retrofit2.HttpException
+import retrofit2.Response
 
 
 class HeadlineListFragment : Fragment() {
@@ -39,10 +42,20 @@ class HeadlineListFragment : Fragment() {
     private lateinit var adapter:HeadlineAdapter
     private lateinit var  manager:LinearLayoutManager
     private  var resultSize=0
+    private var pagination: PublishProcessor<Int>? = null
+    private var compositeDisposable: CompositeDisposable? = null
 
     var list: ArrayList<Article> = java.util.ArrayList()
     var pageNumber=1
-    var loading =false;
+    var loading =false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        pagination = PublishProcessor.create()
+        compositeDisposable = CompositeDisposable()
+
+
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,10 +67,16 @@ class HeadlineListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initRecyclerView();
-       setUpLoadMoreListener()
+        initRecyclerView()
+        setUpLoadMoreListener()
+
+        addingObserver()
+
 
     }
+
+    private fun addingObserver() {
+          }
 
     private fun initRecyclerView() {
         val density = Resources.getSystem().getDisplayMetrics().density
@@ -78,16 +97,6 @@ class HeadlineListFragment : Fragment() {
                         val url = list[position].url
 
                         loadUrl(url)
-                        /*val bundle = bundleOf(
-                            "url" to url
-
-                        )
-                        navController.navigate(
-                            R.id.action_headlinefragment_to_detailsfragment,
-
-                            bundle
-                        )
-*/
 
                     }
                 })
@@ -163,8 +172,7 @@ class HeadlineListFragment : Fragment() {
                 if (!loading&&totalItemCount<=(lastVisibleItem+1)&& resultSize>totalItemCount){
                     pageNumber++
                     loading=true
-                    fetchData()
-
+                    pagination?.onNext(pageNumber)
 
                 }
 
@@ -179,13 +187,59 @@ class HeadlineListFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-        fetchData()
+        //fetchData()
+
+        val disposable = pagination?.onBackpressureDrop()
+            ?.doOnNext { integer ->
+
+                loading=true
+            }
+            ?.concatMap<Response<HeadlineModel>>(object :Function<Int, Publisher<Response<HeadlineModel>>> {
+                override fun apply(t: Int): Publisher<Response<HeadlineModel>> {
+
+                    return viewModel.getHeadlingList(t)
+
+
+                }
 
 
 
-        }
+            })
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.doOnNext(object : Consumer<Response<HeadlineModel>> {
+                @Throws(Exception::class)
+                override fun accept(t: Response<HeadlineModel>?) {
+                    var response=t?.body()
+                    list.addAll(response!!.articles)
+                    resultSize=response?.totalResults
+                    adapter.notifyDataSetChanged()
 
-    private fun fetchData() {
+                    //    mAdapter.setUsers(gitHubUsers.body())
+                    loading=false
+
+                }
+
+                /* requestOnWay = false
+                 loadUser.setVisibility(View.INVISIBLE)
+           */
+            })
+            ?.doOnError { throwable ->
+                if (throwable is HttpException) {
+
+                }
+
+            }
+            ?.subscribe()
+
+        compositeDisposable?.add(disposable!!)
+
+        pagination?.onNext(pageNumber)
+
+
+
+    }
+
+   /* private fun fetchData() {
         val gettingObservable=  viewModel.fetchData(pageNumber)
 
         gettingObservable
@@ -194,9 +248,9 @@ class HeadlineListFragment : Fragment() {
             .subscribe(getHeadlineObserver())
 
     }
+*/
 
-
-    private fun getHeadlineObserver(): Observer<HeadlineModel> {
+   /* private fun getHeadlineObserver(): Observer<HeadlineModel> {
         return object : Observer<HeadlineModel> {
 
             override fun onSubscribe(d: Disposable) {}
@@ -221,7 +275,13 @@ class HeadlineListFragment : Fragment() {
             }
         }
     }
+*/
 
+    override fun onDetach() {
+        super.onDetach()
+        compositeDisposable?.dispose()
+
+    }
 
 
     }
